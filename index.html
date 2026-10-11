@@ -1,0 +1,657 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Рифмовник: поиск рифм по звучанию и каталог панчей. Русский и украинский."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%2315161B%22/%3E%3Ctext x=%2216%22 y=%2223%22 font-family=%22Arial Black,sans-serif%22 font-size=%2219%22 text-anchor=%22middle%22 fill=%22%23FFD43A%22%3E%D0%A0%3C/text%3E%3C/svg%3E"><style>body{margin:0}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Рифмовник</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@700;800&display=swap">
+<style>
+/* Тетрадь рэпера: поиск сверху как главный инструмент, ниже гнёзда созвучий, размеченные маркерами */
+:root{
+  --paper:#EEF0F5; --card:#FFFFFF; --ink:#15161B; --muted:#5A5F6E; --line:#D6DAE4; --pen:#2E39C9;
+  --m1:#FF79B6; --m2:#FFD43A; --m3:#3FD3EC; --m4:#86DD74; --m5:#FFA24D; --m6:#B38BFF;
+  --mks:58%;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111218; --card:#1A1C24; --ink:#ECEEF4; --muted:#959BAC; --line:#2B2F3B; --pen:#929AFF;
+  --m1:#FF5FA8; --m2:#F2C21E; --m3:#22BCD6; --m4:#5EC24C; --m5:#F28A2E; --m6:#9C6BFF;
+  --mks:42%; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#111218; --card:#1A1C24; --ink:#ECEEF4; --muted:#959BAC; --line:#2B2F3B; --pen:#929AFF;
+  --m1:#FF5FA8; --m2:#F2C21E; --m3:#22BCD6; --m4:#5EC24C; --m5:#F28A2E; --m6:#9C6BFF;
+  --mks:42%; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--body);padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px}
+h1{font:800 clamp(30px,7vw,48px)/1 var(--display);letter-spacing:-.01em;margin:0}
+h1 .tail{background:linear-gradient(transparent 38%,color-mix(in srgb,var(--m2) var(--mks),transparent) 38%);padding-inline:2px}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.lang button{background:none;border:0;padding:5px 10px;font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.stats{margin:0;color:var(--muted);font:500 13px/1.4 var(--mono);font-variant-numeric:tabular-nums}
+.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:14px;color:var(--muted)}
+.ghost[aria-pressed="true"]{border-color:var(--pen);color:var(--pen)}
+
+.search{display:flex;flex-direction:column;gap:10px}
+.lbl{font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+#q,#pq{width:100%;background:transparent;border:0;border-bottom:2px solid var(--ink);padding:6px 2px 10px;font:500 clamp(24px,5vw,32px)/1.2 var(--body);color:var(--ink);border-radius:0}
+#pq{font-size:clamp(20px,4vw,24px)}
+#q::placeholder,#pq::placeholder{color:var(--muted);opacity:.55}
+#q:focus,#pq:focus{outline:none;border-bottom-color:var(--pen)}
+
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:-12px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:8px 0;font:600 16px/1 var(--body);color:var(--muted)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab small{font:500 12px var(--mono);margin-left:6px;opacity:.7;font-variant-numeric:tabular-nums}
+.pane{display:flex;flex-direction:column;gap:36px}
+.pane[hidden]{display:none}
+.punch{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.ptype{justify-self:start;align-self:start;margin-top:3px;font:600 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:4px 6px;border-radius:4px;background:color-mix(in srgb,var(--pc) var(--mks),transparent)}
+.pbody{min-width:0;display:flex;flex-direction:column;gap:4px}
+.pbody h3{margin:0;font:600 17px/1.35 var(--body);text-wrap:balance}
+.pbody p{margin:0;color:var(--muted);font-size:15px;max-width:62ch}
+.pbody .words{margin-top:2px}
+.pbody .w{font-size:14px;color:var(--pen)}
+.pbody .tools{display:flex;gap:8px;margin-top:4px}
+.add select{font:inherit;font-size:14px}
+@media (max-width:560px){.punch{grid-template-columns:minmax(0,1fr)}}
+.hint{margin:0;font-size:13px;color:var(--muted)}
+.hint kbd{font:500 12px var(--mono);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+.stress{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14px;color:var(--muted)}
+.letters{display:flex;flex-wrap:wrap;gap:2px}
+.letters span,.letters button{font:500 20px/1 var(--mono);min-width:26px;height:34px;display:inline-grid;place-items:center;border-radius:5px}
+.letters button{border:1px dashed var(--line);background:var(--card)}
+.letters button.on{background:var(--pen);color:var(--card);border-color:var(--pen)}
+
+.results{display:flex;flex-direction:column;gap:18px}
+.group h3{margin:0 0 6px;font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);display:flex;gap:8px;align-items:center}
+.group h3 .n{color:var(--ink)}
+.group.exact h3{color:var(--pen)}
+.empty{margin:0;color:var(--muted);font-size:15px;max-width:60ch}
+.try{display:flex;flex-wrap:wrap;gap:4px 2px;align-items:baseline}
+
+.words{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline}
+.w{background:none;border:0;padding:2px 3px;border-radius:3px;font-size:17px;line-height:1.35;text-align:left;display:inline-flex;align-items:baseline;gap:4px}
+.w:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.w .hl{background:linear-gradient(transparent 42%,color-mix(in srgb,var(--mk,var(--m2)) var(--mks),transparent) 42%);border-radius:1px}
+.w b{font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.w.me{outline:1.5px solid var(--ink);outline-offset:1px}
+.pron{font:400 12px var(--mono);color:var(--muted)}
+.syl{font:600 10px/1 var(--mono);color:var(--pen);border:1px solid currentColor;border-radius:3px;padding:2px 3px;align-self:center}
+.sep{color:var(--line);user-select:none}
+
+.cat-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
+h2{font:700 18px/1.2 var(--display);margin:0}
+.vchips{display:flex;flex-wrap:wrap;gap:4px}
+.vchips button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 11px;font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+.vchips button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.vchips small{opacity:.6;margin-left:4px}
+
+.nests{display:flex;flex-direction:column}
+.nest{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.nest .key{font:600 15px/1.6 var(--mono);color:var(--muted);padding-top:2px}
+.nest .key i{display:block;font:400 11px/1.3 var(--mono);font-style:normal;opacity:.8}
+.nest .note{grid-column:2;margin:0;font-size:13px;color:var(--muted)}
+.nest .tools{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.group .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.tryBox{display:flex;flex-direction:column;gap:12px}
+.tryWords{min-height:3.2em;gap:6px 10px}
+.tryWords .w{font-size:19px}
+.more{align-self:flex-start;margin-top:12px}
+@media (prefers-reduced-motion:no-preference){.tryWords.swap{animation:trySwap .5s ease}@keyframes trySwap{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}}
+.x{background:none;border:0;color:var(--muted);font-size:14px;padding:0 3px;line-height:1}
+.x:hover{color:#D23B3B}
+.mini{border:1px solid var(--line);background:var(--card);border-radius:5px;padding:5px 8px;font:inherit;font-size:14px;color:var(--ink);min-width:0;width:200px;max-width:100%}
+.danger{color:#C8372F;border-color:color-mix(in srgb,#C8372F 40%,var(--line))}
+@media (max-width:560px){.nest{grid-template-columns:minmax(0,1fr)}.nest .note,.nest .tools{grid-column:1}}
+
+.add{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.add h2{font-size:15px}
+.add textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);padding:10px;resize:vertical}
+.add .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.primary{background:var(--pen);color:#fff;border:0;border-radius:6px;padding:8px 16px;font-weight:600}
+.msg{font-size:14px;color:var(--muted);margin:0}
+.msg.err{color:#C8372F}
+@media (prefers-reduced-motion:no-preference){.w,.vchips button{transition:background .12s}}
+</style>
+
+</head><body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <h1><span id="h1a">Рифм</span><span class="tail">овник</span></h1>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div class="lang" role="group" aria-label="Язык каталога"><button data-lang="ru" aria-pressed="true">RU</button><button data-lang="uk" aria-pressed="false">UA</button></div>
+      <p class="stats" id="stats">загружаю каталог…</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Разделы">
+    <button class="tab" role="tab" id="tab-rhymes" data-tab="rhymes" aria-selected="true" aria-controls="paneRhymes"><span data-i18n="tabR">Рифмы</span><small id="cntR"></small></button>
+    <button class="tab" role="tab" id="tab-punches" data-tab="punches" aria-selected="false" aria-controls="panePunches"><span data-i18n="tabP">Панчи</span><small id="cntP"></small></button>
+  </nav>
+
+  <div class="pane" id="paneRhymes" role="tabpanel" aria-labelledby="tab-rhymes">
+  <section class="search" aria-label="Поиск рифм">
+    <label class="lbl" for="q" data-i18n="qLabel">Рифма на слово или фразу</label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="кайф" data-i18n-ph="qPh">
+    <p class="hint" data-i18n-html="qHint">Ударение можно отметить заглавной буквой: <kbd>дЕньги</kbd> или плюсом: <kbd>д+еньги</kbd></p>
+    <div class="stress" id="stressPick" hidden></div>
+    <div class="results" id="results"></div>
+  </section>
+
+
+  <section class="tryBox" id="tryBox" aria-label="Попробуй">
+    <div class="cat-head">
+      <h2 data-i18n="tryTitle">Попробуй</h2>
+      <button class="ghost" id="tryNext" data-i18n="tryNext">Другие</button>
+    </div>
+    <div class="words tryWords" id="tryWords" aria-live="polite"></div>
+    <p class="hint" data-i18n="tryHint">Слова меняются каждые 15 секунд. Нажми на любое — покажу рифмы.</p>
+  </section>
+  </div>
+
+  <div class="pane" id="panePunches" role="tabpanel" aria-labelledby="tab-punches" hidden>
+    <section class="search" aria-label="Поиск по панчам">
+      <label class="lbl" for="pq" data-i18n="pqLabel">Поиск по панчам</label>
+      <input id="pq" type="search" autocomplete="off" spellcheck="false" placeholder="Бунин, Левитан, омоним" data-i18n-ph="pqPh">
+      <div class="vchips" id="pchips" role="group" aria-label="Тип панча"></div>
+    </section>
+
+
+    <div class="nests" id="punches"><p class="empty" style="padding-top:14px">Здесь появятся панчи: игры слов, омонимы и отсылки с пояснениями.</p></div>
+  </div>
+</main>
+
+<script>
+/* ---------- языки ---------- */
+const T={
+ ru:{h1a:'Рифм',tabR:'Рифмы',tabP:'Панчи',edit:'Править',done:'Готово',loading:'загружаю каталог…',onlyClaude:'каталог открывается только на claude.ai',failLoad:'каталог недоступен, обнови страницу',
+  qLabel:'Рифма на слово или фразу',qPh:'кайф',qHint:'Ударение можно отметить заглавной буквой: <kbd>дЕньги</kbd> или плюсом: <kbd>д+еньги</kbd>',
+  newNest:'Новое гнездо',newWordsHint:'Слова, которые рифмуются между собой, через запятую или с новой строки. Ударение заглавной буквой. Англицизм с произношением в скобках: <kbd>gold [гОлд]</kbd>',noteLabel:'Пометка, по желанию',notePh:'ассонанс на А',createNest:'Создать гнездо',
+  catTitle:'Гнёзда созвучий',tryTitle:'Попробуй',tryNext:'Другие',tryHint:'Слова меняются каждые 15 секунд. Нажми на любое — покажу рифмы.',pRandom:'Случайные панчи — меняются каждые 15 секунд. Ищи по слову или выбери тип.',more:'Показать ещё',shown:(a,b)=>`Показано ${a} из ${b}`,all:'все',nestsW:['гнездо','гнезда','гнёзд'],rhymesW:['рифма','рифмы','рифм'],wordsW:['слово','слова','слов'],
+  emptyCat:'Каталог пока пуст. Пришли Claude текст трека, и рифмы из него появятся здесь',emptyCatEdit:', или нажми «Править» и добавь гнездо сам',noVowel:v=>`Гнёзд с ударной «${v}» пока нет.`,
+  addWordPh:'+ слово (ударение заглавной)',add:'Добавить',delNest:'Удалить гнездо',sure:'Точно удалить?',remove:'Убрать',
+  guessed:'Ударение угадал, поправь:',stressL:'Ударение:',stressOn:'ударение на',try:'Попробуй:',needVowel:'Нужна хотя бы одна гласная.',
+  sameNest:'Из того же гнезда',gExact:'Точные',gClose:'Созвучия',gEdge:'На грани',
+  noRhymes:k=>`В каталоге пока нет созвучий на <b>[${k}]</b>`,noRhymesEdit:' или создай гнездо ниже в режиме «Править»',sylTitle:n=>`совпадает ${n} слога`,
+  pqLabel:'Поиск по панчам',pqPh:'Бунин, Левитан, омоним',newPunch:'Новый панч',pTitleL:'Суть в нескольких словах',pTitlePh:'Бунин из Воронежа',pTypeL:'Тип',pNoteL:'Почему это работает',pNotePh:'Бунин родился в Воронеже, как и сам рэпер',pWordsL:'Ключевые слова через запятую, по ним можно перейти к рифмам',pWordsPh:'Бунин',createPunch:'Добавить панч',
+  ptypes:{'омоним':['Омонимы','омоним'],'отсылка':['Отсылки','отсылка'],'игра слов':['Игра слов','игра слов'],'двойной смысл':['Двойной смысл','двойной смысл']},
+  pEmpty:'Панчей пока нет. Пришли Claude тексты, и он отметит игры слов и отсылки',pEmptyEdit:', или добавь панч сам в режиме «Править»',pNone:'Ничего не нашлось. Попробуй другое слово или сбрось фильтр.',pFail:'Панчи не загрузились, обнови страницу.',rhymesOn:w=>`Рифмы на «${w}»`,del:'Удалить',
+  needTitle:'Напиши суть панча.',punchAdded:'Панч добавлен.',needTwo:'Нужно минимум два слова.',nestCreated:'Гнездо создано.',markStress:'Отметь ударение заглавной буквой: ',full:'Каталог заполнен: удали лишние гнёзда.',notSaved:'Не сохранилось, попробуй ещё раз.',
+  vowels:{'а':'А','о':'О','у':'У','э':'Э','и':'И'}},
+ uk:{h1a:'Рим',tabR:'Рими',tabP:'Панчі',edit:'Редагувати',done:'Готово',loading:'завантажую каталог…',onlyClaude:'каталог відкривається лише на claude.ai',failLoad:'каталог недоступний, онови сторінку',
+  qLabel:'Рима до слова чи фрази',qPh:'серце',qHint:'Наголос можна позначити великою літерою: <kbd>сЕрце</kbd> або плюсом: <kbd>с+ерце</kbd>',
+  newNest:'Нове гніздо',newWordsHint:'Слова, що римуються між собою, через кому або з нового рядка. Наголос великою літерою. Англіцизм із вимовою в дужках: <kbd>gold [гОлд]</kbd>',noteLabel:'Позначка, за бажанням',notePh:'асонанс на А',createNest:'Створити гніздо',
+  catTitle:'Гнізда співзвуч',tryTitle:'Спробуй',tryNext:'Інші',tryHint:'Слова змінюються кожні 15 секунд. Натисни на будь-яке — покажу рими.',pRandom:'Випадкові панчі — змінюються кожні 15 секунд. Шукай за словом або обери тип.',more:'Показати ще',shown:(a,b)=>`Показано ${a} з ${b}`,all:'всі',nestsW:['гніздо','гнізда','гнізд'],rhymesW:['рима','рими','рим'],wordsW:['слово','слова','слів'],
+  emptyCat:'Каталог поки порожній. Надішли Claude текст треку, і рими з нього з’являться тут',emptyCatEdit:', або натисни «Редагувати» і додай гніздо сам',noVowel:v=>`Гнізд із наголошеною «${v}» поки немає.`,
+  addWordPh:'+ слово (наголос великою)',add:'Додати',delNest:'Видалити гніздо',sure:'Точно видалити?',remove:'Прибрати',
+  guessed:'Наголос вгадав, виправ:',stressL:'Наголос:',stressOn:'наголос на',try:'Спробуй:',needVowel:'Потрібна хоча б одна голосна.',
+  sameNest:'З того ж гнізда',gExact:'Точні',gClose:'Співзвуччя',gEdge:'На межі',
+  noRhymes:k=>`У каталозі поки немає співзвуч до <b>[${k}]</b>`,noRhymesEdit:' або створи гніздо нижче в режимі «Редагувати»',sylTitle:n=>`збігається складів: ${n}`,
+  pqLabel:'Пошук по панчах',pqPh:'омонім, відсилка',newPunch:'Новий панч',pTitleL:'Суть кількома словами',pTitlePh:'Гра з назвою міста',pTypeL:'Тип',pNoteL:'Чому це працює',pNotePh:'Пояснення своїми словами',pWordsL:'Ключові слова через кому, за ними можна перейти до рим',pWordsPh:'слово',createPunch:'Додати панч',
+  ptypes:{'омоним':['Омоніми','омонім'],'отсылка':['Відсилки','відсилка'],'игра слов':['Гра слів','гра слів'],'двойной смысл':['Подвійний зміст','подвійний зміст']},
+  pEmpty:'Панчів поки немає. Надішли Claude тексти, і він позначить гру слів і відсилки',pEmptyEdit:', або додай панч сам у режимі «Редагувати»',pNone:'Нічого не знайшлося. Спробуй інше слово або скинь фільтр.',pFail:'Панчі не завантажилися, онови сторінку.',rhymesOn:w=>`Рими до «${w}»`,del:'Видалити',
+  needTitle:'Напиши суть панчу.',punchAdded:'Панч додано.',needTwo:'Потрібно щонайменше два слова.',nestCreated:'Гніздо створено.',markStress:'Познач наголос великою літерою: ',full:'Каталог заповнений: видали зайві гнізда.',notSaved:'Не збереглося, спробуй ще раз.',
+  vowels:{'а':'А','о':'О','у':'У','э':'Е','и':'И'}}
+};
+let lang='ru';
+const t=k=>T[lang][k];
+const col=name=>lang==='ru'?name:name+'_uk';
+
+/* ---------- фонетика ---------- */
+const ACUTE='́', VOWELS='аеёиоуыэюяєії';
+const LETTER=/[а-яёєіїґ]/;
+const isV=c=>VOWELS.includes(c);
+const PH={
+ ru:{VS:{'а':'а','я':'а','о':'о','ё':'о','у':'у','ю':'у','э':'э','е':'э','и':'и','ы':'и'},
+     VU:{'а':'а','о':'а','я':'а','у':'у','ю':'у','е':'и','э':'и','и':'и','ы':'и','ё':'о'},devoice:true},
+ uk:{VS:{'а':'а','я':'а','о':'о','у':'у','ю':'у','е':'э','є':'э','и':'и','і':'и','ї':'и','ё':'о','ы':'и','э':'э'},
+     VU:{'а':'а','я':'а','о':'о','у':'у','ю':'у','е':'и','є':'и','и':'и','і':'и','ї':'и','ё':'о','ы':'и','э':'и'},devoice:false}
+};
+const DEV={'б':'п','в':'ф','г':'к','д':'т','ж':'ш','з':'с'};
+const VOI={'п':'б','ф':'в','к':'г','т':'д','ш':'ж','с':'з'};
+const VOICELESS=new Set([...'пфктшсхцчщ']), VOICED_OBS=new Set([...'бгджз']);
+const F={'п':'lab stop 0','б':'lab stop 1','ф':'lab fric 0','в':'lab fric 1','м':'lab nas s','т':'den stop 0','д':'den stop 1','с':'den fric 0','з':'den fric 1','ц':'den affr 0','н':'den nas s','л':'den liq s','р':'den liq s','ш':'pal fric 0','ж':'pal fric 1','щ':'pal fric 0','ч':'pal affr 0','к':'vel stop 0','г':'vel stop 1','х':'vel fric 0','h':'vel fric 1','j':'pal glide s'};
+
+function parse(raw){
+  const src=(raw||'').normalize('NFC');
+  const hasLower=/[а-яёєіїґ]/.test(src);
+  let out='',stress=-1,plusNext=false,upperIdx=-1,yoIdx=-1,explicit=false;
+  for(const ch of src){
+    if(ch===ACUTE||ch==="'"||ch==='’'||ch==='`'||ch==='ʼ'){const k=out.length-1;if(k>=0&&isV(out[k])){stress=k;explicit=true}continue}
+    if(ch==='+'){plusNext=true;continue}
+    const lo=ch.toLowerCase();
+    if(LETTER.test(lo)){
+      if(isV(lo)){
+        if(plusNext){stress=out.length;explicit=true;plusNext=false}
+        if(ch!==lo&&hasLower&&upperIdx<0)upperIdx=out.length;
+        if(lo==='ё'&&yoIdx<0)yoIdx=out.length;
+      }
+      out+=lo;
+    }else if(/[\s\-–—,.]/.test(ch)){if(out&&!out.endsWith(' '))out+=' '}
+  }
+  out=out.trimEnd();
+  if(!explicit){if(upperIdx>=0)stress=upperIdx;else if(yoIdx>=0)stress=yoIdx}
+  const vidx=[];for(let i=0;i<out.length;i++)if(isV(out[i]))vidx.push(i);
+  if(stress<0&&vidx.length===1)stress=vidx[0];
+  if(stress>=out.length)stress=-1;
+  return{disp:out,stress,vidx,key:out.replace(/ё/g,'е')};
+}
+function normKey(s){return(s||'').normalize('NFC').toLowerCase().replace(/[́'’`ʼ+]/g,'').replace(/ё/g,'е').replace(/[^a-zа-яєіїґ0-9]+/g,' ').trim()}
+
+function phon(p,lg){
+  if(!p||p.stress<0)return null;
+  const cfg=PH[lg||lang];
+  let s=p.disp.slice(0,p.stress)+p.disp[p.stress].toUpperCase()+p.disp.slice(p.stress+1);
+  s=s.replace(/ть?с[яЯ](?= |$)/g,m=>'ц'+m.slice(-1)).replace(/[сз]ч/g,'щ').replace(/стн/g,'сн').replace(/здн/g,'зн').replace(/вств/g,'ств').replace(/лнц/g,'нц').replace(/[ьъ]/g,'');
+  const tk=[];
+  for(const ch of s){
+    if(ch===' '){if(tk.length)tk[tk.length-1].end=true;continue}
+    const lo=ch.toLowerCase(),st=ch!==lo;
+    if(isV(lo))tk.push({c:st?cfg.VS[lo]:cfg.VU[lo],v:true,st});
+    else{
+      let c=lo==='й'?'j':lo;
+      if(lg==='uk'||(!lg&&lang==='uk')){if(c==='г')c='h';else if(c==='ґ')c='г'}
+      tk.push({c,v:false});
+    }
+  }
+  if(tk.length)tk[tk.length-1].end=true;
+  if(cfg.devoice)for(let i=tk.length-1;i>=0;i--){
+    const x=tk[i];if(x.v)continue;const nx=tk[i+1];
+    if(x.end||!nx){if(DEV[x.c])x.c=DEV[x.c];continue}
+    if(!nx.v){if(VOICELESS.has(nx.c)&&DEV[x.c])x.c=DEV[x.c];else if(VOICED_OBS.has(nx.c)&&VOI[x.c])x.c=VOI[x.c]}
+  }
+  const si=tk.findIndex(x=>x.st);if(si<0)return null;
+  let j=si-1,pre='';while(j>=0&&!tk[j].v){pre=tk[j].c+pre;j--}
+  const preV=[];for(let k=j;k>=0&&preV.length<2;k--)if(tk[k].v)preV.push(tk[k].c);
+  const C=[''],V=[];
+  for(let k=si+1;k<tk.length;k++){const x=tk[k];if(x.v){V.push(x.c);C.push('')}else C[C.length-1]+=x.c}
+  let key=(tk[si].c.toUpperCase()+C.map((c,i)=>c+(V[i]||'')).join('')).replace(/j/g,'й');
+  if((lg||lang)==='uk')key=key.replace(/Э/g,'Е').replace(/г/g,'ґ').replace(/h/g,'г');
+  return{sv:tk[si].c,opor:pre.slice(-1),preV,C,V,key};
+}
+function cc(a,b){
+  if(a===b)return 0;
+  const x=(F[a]||'? ? ?').split(' '),y=(F[b]||'? ? ?').split(' ');
+  let d=0;if(x[0]!==y[0])d+=.45;if(x[1]!==y[1])d+=.45;if(x[2]!==y[2])d+=.1;
+  if(d===.1)return .2;return Math.min(1,Math.max(.3,d));
+}
+function clSim(a,b){
+  if(a===b)return 1;if(!a||!b)return .25;
+  const A=[...a],B=[...b],n=A.length,m=B.length,INS=.6;
+  const D=Array.from({length:n+1},()=>Array(m+1).fill(0));
+  for(let i=0;i<=n;i++)D[i][0]=i*INS;for(let k=0;k<=m;k++)D[0][k]=k*INS;
+  for(let i=1;i<=n;i++)for(let k=1;k<=m;k++)D[i][k]=Math.min(D[i-1][k]+INS,D[i][k-1]+INS,D[i-1][k-1]+cc(A[i-1],B[k-1]));
+  return Math.max(0,1-D[n][m]/Math.max(n,m));
+}
+function compare(a,b){
+  if(!a||!b||a.sv!==b.sv)return null;
+  const na=a.V.length,nb=b.V.length,n=Math.max(na,nb);
+  let sum=0,ws=0;
+  for(let i=0;i<=n;i++){const w=i===0?2:(i===n?1.4:1);const s=(i<a.C.length&&i<b.C.length)?clSim(a.C[i],b.C[i]):0;sum+=w*s;ws+=w}
+  const cons=sum/ws;
+  let vm=0;for(let i=0;i<Math.min(na,nb);i++)if(a.V[i]===b.V[i])vm++;
+  const vow=n?vm/n:1;
+  const pre=(!a.opor&&!b.opor)?1:(!a.opor||!b.opor)?.4:1-cc(a.opor,b.opor);
+  let pm=0;for(let i=0;i<Math.min(a.preV.length,b.preV.length);i++){if(a.preV[i]===b.preV[i])pm++;else break}
+  const total=(.6*cons+.25*vow+.15*pre+.04*pm)*(na===nb?1:.55);
+  let label=null;
+  if(na===nb&&vow===1&&cons>=.97)label=(pre===1&&(a.opor||b.opor))?'rich':'exact';
+  else if(na===nb&&vow===1&&cons>=.45)label='close';
+  else if(na===nb&&total>=.5)label='edge';
+  const syl=(label&&label!=='edge')?1+vm+pm:0;
+  return{total,label,syl};
+}
+
+/* ---------- записи каталога ---------- */
+const cache=new Map();
+function entry(raw){
+  const ck=lang+'\u0000'+raw;
+  if(cache.has(ck))return cache.get(ck);
+  const s=(raw||'').normalize('NFC').trim();
+  const m=s.match(/^(.*?)\s*\[([^\]]+)\]\s*$/);
+  const p=parse(m?m[2]:s);
+  const e={raw:s,p,shown:m?m[1].trim():null,pron:m?m[2].trim():null,ph:phon(p,lang)};
+  e.keys=new Set([p.key,normKey(e.shown||s)]);
+  cache.set(ck,e);return e;
+}
+
+/* ---------- состояние ---------- */
+let db=null,user=null,canWrite=false,editing=false;
+let nests=[],flat=[],vFilter='all',forced=null,loaded=false;
+let punches=[],pType='all',pLoaded=false,tab='rhymes';
+const S={ru:{nests:[],punches:[],loaded:false,pLoaded:false},uk:{nests:[],punches:[],loaded:false,pLoaded:false}};
+const PTYPES=[['омоним',6],['отсылка',3],['игра слов',1],['двойной смысл',5]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function colorOf(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))>>>0;return 1+h%6}
+const VORDER=['а','о','у','э','и'];
+function plural(n,[a,b,c]){const m=n%10,h=n%100;return m===1&&h!==11?a:(m>=2&&m<=4&&(h<12||h>14))?b:c}
+
+function applyI18n(){
+  document.documentElement.lang=lang==='uk'?'uk':'ru';
+  $('h1a').textContent=t('h1a');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{el.innerHTML=t(el.dataset.i18nHtml)});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh)});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===lang));
+}
+function setLang(l){
+  lang=l==='uk'?'uk':'ru';
+  try{localStorage.setItem('rf-lang',lang)}catch{}
+  nests=S[lang].nests;loaded=S[lang].loaded;punches=S[lang].punches;pLoaded=S[lang].pLoaded;
+  vFilter='all';pType='all';forced=null;pLimit=P_STEP;
+  applyI18n();
+  if(!db){$('stats').textContent=db===null&&started?t('onlyClaude'):t('loading')}
+  rebuild();renderPunches();
+  if(db)loadLang(lang);
+}
+
+function wordHTML(e,mk,opts={}){
+  const cls='w'+(opts.me?' me':'');
+  const data=`data-w="${esc(e.raw)}"`;
+  const syl=opts.syl>=3?`<span class="syl" title="${esc(t('sylTitle')(opts.syl))}">×${opts.syl}</span>`:'';
+  if(e.shown){
+    return `<button class="${cls}" ${data} style="--mk:var(--m${mk})"><span class="hl">${esc(e.shown)}</span><span class="pron">[${esc(e.pron)}]</span>${syl}</button>`;
+  }
+  const {disp,stress}=e.p;
+  if(stress<0)return `<button class="${cls}" ${data}>${esc(disp)}</button>`;
+  return `<button class="${cls}" ${data} style="--mk:var(--m${mk})">${esc(disp.slice(0,stress))}<span class="hl"><b>${esc(disp[stress])}</b>${esc(disp.slice(stress+1))}</span>${syl}</button>`;
+}
+
+/* Индексы для быстрого поиска: по ударной гласной и по ключу слова */
+let bySv=new Map(),byKey=new Map();
+function rebuild(){
+  flat=[];bySv=new Map();byKey=new Map();
+  for(const n of nests){
+    n.entries=(n.words||[]).map(entry);n.color=colorOf(n.id);n.ph=(n.entries.find(e=>e.ph)||{}).ph||null;
+    for(const e of n.entries){
+      const it={e,n};flat.push(it);
+      if(e.ph){if(!bySv.has(e.ph.sv))bySv.set(e.ph.sv,[]);bySv.get(e.ph.sv).push(it)}
+      for(const k of e.keys){if(!byKey.has(k))byKey.set(k,[]);byKey.get(k).push(it)}
+    }
+  }
+  const wc=flat.length;
+  if(loaded)$('stats').textContent=`${nests.length} ${plural(nests.length,t('nestsW'))} · ${wc} ${plural(wc,t('rhymesW'))}`;
+  else if(db)$('stats').textContent=S[lang].err?`${t('failLoad')} · ${S[lang].err}`:t('loading');
+  $('cntR').textContent=loaded?nests.length:'';
+  renderCatalog();renderSearch();
+}
+
+/* ---------- «Попробуй»: случайные слова, меняются каждые 15 секунд ---------- */
+let tryPick=[],tryLang='',tryHover=false;
+function renderCatalog(force){
+  const box=$('tryWords');
+  if(!loaded||!flat.length){box.innerHTML=loaded?`<p class="empty">${t('emptyCat')}${canWrite?t('emptyCatEdit'):''}.</p>`:'';return}
+  if(force||!tryPick.length||tryLang!==lang){
+    const pick=[],used=new Set();
+    for(let tries=0;pick.length<8&&tries<200;tries++){
+      const n=nests[Math.floor(Math.random()*nests.length)];
+      if(!n||used.has(n.id)||!n.entries.length)continue;
+      used.add(n.id);pick.push(n.entries[Math.floor(Math.random()*n.entries.length)].raw+'\u0000'+n.id);
+    }
+    tryPick=pick;tryLang=lang;
+  }
+  box.innerHTML=tryPick.map(s=>{const [raw,id]=s.split('\u0000');const n=nests.find(x=>x.id===id);return n?wordHTML(entry(raw),n.color):''}).join('<span class="sep">·</span>');
+  if(force){box.classList.remove('swap');void box.offsetWidth;box.classList.add('swap')}
+}
+setInterval(()=>{
+  if(document.hidden||tryHover)return;
+  if(tab==='rhymes')renderCatalog(true);
+},15000);
+
+/* ---------- поиск ---------- */
+function guessStress(p){
+  let best=-1,bestScore=0;
+  for(const i of p.vidx){
+    const ph=phon({...p,stress:i},lang);let sc=0;
+    for(const {e} of (ph&&bySv.get(ph.sv))||[]){const r=compare(ph,e.ph);if(r&&r.label)sc+=r.label==='edge'?.3:r.label==='close'?1:3}
+    if(sc>bestScore){bestScore=sc;best=i}
+  }
+  if(best<0)best=p.vidx[Math.max(0,p.vidx.length-2)];
+  return best;
+}
+function renderStressPicker(p,stress,guessed){
+  const box=$('stressPick');
+  if(p.vidx.length<2){box.hidden=true;return}
+  box.hidden=false;
+  const letters=[...p.disp].map((c,i)=>isV(c)?`<button data-stress="${i}" class="${i===stress?'on':''}" aria-label="${t('stressOn')} ${c}">${esc(c)}</button>`:`<span>${c===' '?'&nbsp;':esc(c)}</span>`).join('');
+  box.innerHTML=`<span>${guessed?t('guessed'):t('stressL')}</span><div class="letters">${letters}</div>`;
+}
+function renderSearch(){
+  const raw=$('q').value;const res=$('results');
+  if(!raw.trim()){$('stressPick').hidden=true;res.innerHTML='';return}
+  const qk=normKey(raw);
+  const hits=byKey.get(qk)||[];
+  let ph,qp=null;
+  if(hits.length&&forced===null){ph=hits[0].e.ph;$('stressPick').hidden=true}
+  else{
+    qp=entry(raw).p;
+    if(!qp.vidx.length){$('stressPick').hidden=true;res.innerHTML=`<p class="empty">${t('needVowel')}</p>`;return}
+    let st=forced!==null?forced:qp.stress,guessed=false;
+    if(st<0){st=guessStress(qp);guessed=true}
+    renderStressPicker(qp,st,guessed);
+    ph=phon({...qp,stress:st},lang);
+  }
+  const own=new Set(hits.map(h=>h.n.id));
+  let html='';
+  for(const id of own){
+    const n=nests.find(x=>x.id===id);
+    const words=n.entries.map(e=>`<span style="display:inline-flex;align-items:baseline">${wordHTML(e,n.color,{me:e.keys.has(qk)})}${editing?`<button class="x" data-del-word="${esc(e.raw)}" data-nest="${n.id}" aria-label="${t('remove')} ${esc(e.raw)}">×</button>`:''}</span>`).join('<span class="sep">/</span>');
+    const tools=editing?`<div class="tools"><input class="mini" id="add-${n.id}" data-add-to="${n.id}" placeholder="${t('addWordPh')}"><button class="ghost" data-add-btn="${n.id}">${t('add')}</button><button class="ghost danger" data-del-nest="${n.id}">${t('delNest')}</button></div>`:'';
+    html+=`<div class="group exact"><h3>${t('sameNest')} <span class="n">${n.entries.length}</span> <span>[${esc(n.ph?n.ph.key:'')}]</span></h3><div class="words">${words}</div>${n.note?`<p class="hint" style="margin-top:4px">${esc(n.note)}</p>`:''}${tools}</div>`;
+  }
+  const seen=new Set();for(const id of own)for(const e of nests.find(x=>x.id===id).entries)seen.add(e.p.key);
+  const found={exact:[],close:[],edge:[]};
+  for(const {e,n} of (ph&&bySv.get(ph.sv))||[]){
+    if(own.has(n.id)||seen.has(e.p.key)||e.keys.has(qk))continue;
+    const r=compare(ph,e.ph);if(!r||!r.label)continue;
+    seen.add(e.p.key);
+    found[r.label==='rich'?'exact':r.label].push({e,n,r});
+  }
+  const titles={exact:t('gExact'),close:t('gClose'),edge:t('gEdge')};
+  for(const k of ['exact','close','edge']){
+    const arr=found[k].sort((a,b)=>b.r.total-a.r.total);if(!arr.length)continue;
+    html+=`<div class="group ${k}"><h3>${titles[k]} <span class="n">${arr.length}</span></h3><div class="words">${arr.map(({e,n,r})=>wordHTML(e,n.color,{syl:r.syl})).join('<span class="sep">/</span>')}</div></div>`;
+  }
+  if(!html)html=`<p class="empty">${t('noRhymes')(esc(ph?ph.key:raw))}${canWrite?t('noRhymesEdit'):''}.</p>`;
+  res.innerHTML=html;
+}
+
+/* ---------- панчи ---------- */
+function setTab(x){
+  tab=x;
+  $('paneRhymes').hidden=x!=='rhymes';$('panePunches').hidden=x!=='punches';
+  $('tab-rhymes').setAttribute('aria-selected',x==='rhymes');$('tab-punches').setAttribute('aria-selected',x==='punches');
+  try{localStorage.setItem('rf-tab',x)}catch{}
+  if(x==='punches')renderPunches();
+}
+function renderPunches(){
+  $('cntP').textContent=pLoaded?punches.length:'';
+  if(tab!=='punches')return;
+  const counts={all:punches.length};for(const [k] of PTYPES)counts[k]=0;
+  for(const p of punches)if(counts[p.type]!==undefined)counts[p.type]++;
+  $('pchips').innerHTML=[['all'],...PTYPES].map(([k])=>`<button data-ptype="${esc(k)}" aria-pressed="${pType===k}">${esc(k==='all'?t('all'):t('ptypes')[k][0].toLowerCase())}<small>${counts[k]}</small></button>`).join('');
+  if(!pLoaded){$('punches').innerHTML=`<p class="empty" style="padding-top:14px">${S[lang].pErr?`${t('pFail')} (${esc(S[lang].pErr)})`:t('loading')}</p>`;return}
+  const q=normKey($('pq').value);
+  const list=punches.filter(p=>(pType==='all'||p.type===pType)&&(!q||normKey([p.title,p.note,p.type,(t('ptypes')[p.type]||[])[1],...(p.words||[])].join(' ')).includes(q)))
+    .sort((a,b)=>(b.created||'').localeCompare(a.created||'')||(a.title||'').localeCompare(b.title||'',lang));
+  if(!punches.length){$('punches').innerHTML=`<p class="empty" style="padding-top:14px">${t('pEmpty')}${canWrite?t('pEmptyEdit'):''}.</p>`;return}
+  if(!list.length){$('punches').innerHTML=`<p class="empty" style="padding-top:14px">${t('pNone')}</p>`;return}
+  /* Рисуем порциями по 40; следующая порция догружается, когда низ списка появляется на экране */
+  const shown=list.slice(0,pLimit);
+  const tail=list.length>pLimit?`<div class="pMoreBox" id="pMoreBox"><button class="ghost more" id="pMore">${t('more')}</button><p class="hint">${t('shown')(shown.length,list.length)}</p></div>`:'';
+  $('punches').innerHTML=shown.map(p=>{
+    const ty=PTYPES.find(x=>x[0]===p.type)||['?',2];
+    const label=(t('ptypes')[p.type]||[p.type,p.type])[1];
+    const words=(p.words||[]).map(w=>`<button class="w" data-w="${esc(w)}" title="${esc(t('rhymesOn')(w))}">${esc(w)}</button>`).join('<span class="sep">·</span>');
+    const tools=editing?`<div class="tools"><button class="ghost danger" data-del-punch="${esc(p.id)}">${t('del')}</button></div>`:'';
+    return `<article class="punch"><span class="ptype" style="--pc:var(--m${ty[1]})">${esc(label||'')}</span><div class="pbody"><h3>${esc(p.title||'')}</h3>${p.note?`<p>${esc(p.note)}</p>`:''}${words?`<div class="words">${words}</div>`:''}${tools}</div></article>`;
+  }).join('')+tail;
+  const mb=$('pMoreBox');if(mb&&pObserver)pObserver.observe(mb);
+}
+const P_STEP=40;
+let pLimit=P_STEP;
+const pObserver='IntersectionObserver' in window?new IntersectionObserver(es=>{
+  if(es.some(e=>e.isIntersecting)&&tab==='punches'){pObserver.disconnect();pLimit+=P_STEP;renderPunches()}
+},{rootMargin:'600px 0px'}):null;
+async function createPunch(){
+  const msg=$('punchMsg');msg.className='msg';
+  const title=$('pTitle').value.trim();
+  if(!title){msg.className='msg err';msg.textContent=t('needTitle');return}
+  const now=new Date().toISOString();
+  const words=$('pWords').value.split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+  try{await db.collection(col('punches')).add({title,type:$('pType').value,note:$('pNote').value.trim(),words,created:now});
+    $('pTitle').value='';$('pNote').value='';$('pWords').value='';msg.textContent=t('punchAdded')}
+  catch(e){msg.className='msg err';msg.textContent=writeFail(e)}
+}
+function delPunch(id,btn){
+  const key=lang+':p:'+id;
+  if(armed!==key){armed=key;btn.textContent=t('sure');setTimeout(()=>{if(armed===key){armed=null;btn.textContent=t('del')}},3000);return}
+  armed=null;const c=col('punches');queue(key,()=>db.doc(c+'/'+id).delete()).catch(writeFail);
+}
+
+/* ---------- запись ---------- */
+const chains=new Map();
+function queue(id,fn){const p=(chains.get(id)||Promise.resolve()).then(fn,fn);chains.set(id,p.catch(()=>{}));return p}
+function checkWords(list){
+  const bad=list.filter(w=>{const e=entry(w);return !e.ph});
+  return bad.length?t('markStress')+bad.join(', '):'';
+}
+function toStored(w){
+  const e=entry(w);if(e.shown)return `${e.shown} [${markStress(e.p)}]`;return markStress(e.p);
+}
+function markStress(p){return p.stress<0?p.disp:p.disp.slice(0,p.stress+1)+(p.disp[p.stress]==='ё'?'':ACUTE)+p.disp.slice(p.stress+1)}
+function writeFail(err){
+  return (err&&err.code==='quota_exceeded')?t('full'):t('notSaved');
+}
+async function createNest(){
+  const list=$('newWords').value.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);
+  const msg=$('addMsg');msg.className='msg';
+  if(list.length<2){msg.className='msg err';msg.textContent=t('needTwo');return}
+  const bad=checkWords(list);if(bad){msg.className='msg err';msg.textContent=bad;return}
+  const now=new Date().toISOString();
+  try{await db.collection(col('nests')).add({words:list.map(toStored),note:$('newNote').value.trim(),created:now,updated:now});
+    $('newWords').value='';$('newNote').value='';msg.textContent=t('nestCreated')}
+  catch(e){msg.className='msg err';msg.textContent=writeFail(e)}
+}
+function addWord(id){
+  const inp=$('add-'+id);const w=(inp&&inp.value||'').trim();if(!w)return;
+  const bad=checkWords([w]);if(bad){inp.setCustomValidity(bad);inp.reportValidity();setTimeout(()=>inp.setCustomValidity(''),2500);return}
+  const c=col('nests'),l=lang;
+  queue(l+':'+id,async()=>{const n=S[l].nests.find(x=>x.id===id);if(!n)return;
+    const st=toStored(w);if(n.entries&&n.entries.some(e=>e.p.key===entry(st).p.key))return;
+    await db.doc(c+'/'+id).update({words:[...n.words,st],updated:new Date().toISOString()});
+  }).then(()=>{const i=$('add-'+id);if(i){i.value='';i.focus()}}).catch(writeFail);
+}
+function delWord(id,raw){
+  const c=col('nests'),l=lang;
+  queue(l+':'+id,async()=>{const n=S[l].nests.find(x=>x.id===id);if(!n)return;
+    const words=n.words.filter(w=>w!==raw);
+    if(!words.length)await db.doc(c+'/'+id).delete();
+    else await db.doc(c+'/'+id).update({words,updated:new Date().toISOString()});
+  }).catch(writeFail);
+}
+let armed=null;
+function delNest(id,btn){
+  const key=lang+':n:'+id;
+  if(armed!==key){armed=key;btn.textContent=t('sure');setTimeout(()=>{if(armed===key){armed=null;btn.textContent=t('delNest')}},3000);return}
+  armed=null;const c=col('nests');queue(lang+':'+id,()=>db.doc(c+'/'+id).delete()).catch(writeFail);
+}
+
+/* ---------- события ---------- */
+let tmr;
+$('q').addEventListener('input',()=>{forced=null;clearTimeout(tmr);tmr=setTimeout(renderSearch,110)});
+let ptmr;
+$('pq').addEventListener('input',()=>{clearTimeout(ptmr);ptmr=setTimeout(()=>{pLimit=P_STEP;renderPunches()},110)});
+$('tryBox').addEventListener('mouseenter',()=>{tryHover=true});
+$('tryBox').addEventListener('mouseleave',()=>{tryHover=false});
+$('tryBox').addEventListener('focusin',()=>{tryHover=true});
+$('tryBox').addEventListener('focusout',()=>{tryHover=false});
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('button');if(!b)return;
+  if(b.dataset.lang){if(b.dataset.lang!==lang){$('q').value='';$('pq').value='';setLang(b.dataset.lang)}return}
+  if(b.dataset.delWord!==undefined){delWord(b.dataset.nest,b.dataset.delWord);return}
+  if(b.dataset.tab){setTab(b.dataset.tab);return}
+  if(b.dataset.ptype){pType=b.dataset.ptype;pLimit=P_STEP;renderPunches();return}
+  if(b.id==='pMore'){pLimit+=P_STEP;renderPunches();return}
+  if(b.id==='tryNext'){renderCatalog(true);return}
+  if(b.dataset.delPunch){delPunch(b.dataset.delPunch,b);return}
+  if(b.id==='createPunch'){createPunch();return}
+  if(b.dataset.w!==undefined){
+    if(tab!=='rhymes')setTab('rhymes');
+    $('q').value=b.dataset.w;forced=null;renderSearch();
+    $('q').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});return}
+  if(b.dataset.stress!==undefined){forced=+b.dataset.stress;renderSearch();return}
+  if(b.dataset.v){vFilter=b.dataset.v;renderCatalog();return}
+  if(b.dataset.addBtn){addWord(b.dataset.addBtn);return}
+  if(b.dataset.delNest){delNest(b.dataset.delNest,b);return}
+  if(b.id==='createNest'){createNest();return}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.dataset&&ev.target.dataset.addTo){ev.preventDefault();addWord(ev.target.dataset.addTo)}});
+
+let started=false;
+{let l='ru',x='rhymes';
+ try{l=localStorage.getItem('rf-lang')||l;x=localStorage.getItem('rf-tab')||x}catch{}
+ const h=location.hash.slice(1);
+ if(h==='ua'||h==='uk')l='uk';else if(h==='ru')l='ru';
+ if(h==='punches')x='punches';else if(h==='rhymes')x='rhymes';
+ setTab(x==='punches'?'punches':'rhymes');setLang(l)}
+(async()=>{
+  db=await Promise.resolve(true); // статическая копия: данные из data/*.json; await даёт скрипту дочитаться до конца
+  started=true;
+  if(!db){$('stats').textContent=t('onlyClaude');return}
+  canWrite=false; // каталог только для чтения: пополняется через Claude
+  await loadLang(lang);
+  loadLang(lang==='ru'?'uk':'ru');
+})();
+
+/* Один запрос отдаёт не больше 1000 документов, а сервер может вернуть страницу и меньше запрошенной.
+   Поэтому читаем коллекцию страницами по полю created, пока страницы приносят новые документы.
+   Граница страницы берётся включительно (>=), дубли отсеиваются по id, так одинаковые created не теряются. */
+async function fetchAll(col){
+  const r=await fetch(`data/${col}.json`,{cache:'no-cache'});
+  if(!r.ok)throw{code:'http_'+r.status};
+  return r.json();
+}
+async function retry(fn){
+  for(let i=0;;i++){
+    try{return await fn()}
+    catch(e){
+      const c=e&&e.code;
+      if(i>=3||!(c==='unavailable'||c==='resource_exhausted'))throw e;
+      await new Promise(r=>setTimeout(r,900*(i+1)+Math.random()*700));
+    }
+  }
+}
+const loading={ru:null,uk:null};
+function loadLang(l){
+  if(loading[l])return loading[l];
+  if(S[l].loaded&&S[l].pLoaded)return Promise.resolve();
+  const nc=l==='ru'?'nests':'nests_uk',pc=l==='ru'?'punches':'punches_uk';
+  const code=e=>String((e&&e.code)||'error');
+  S[l].err=S[l].pErr=null;
+  if(l===lang&&!S[l].loaded)$('stats').textContent=t('loading');
+  loading[l]=Promise.all([
+    S[l].loaded?null:fetchAll(nc).then(docs=>{
+      S[l].nests=docs;S[l].loaded=true;
+      if(l===lang){nests=docs;loaded=true;rebuild()}
+    },e=>{S[l].err=code(e);if(l===lang)rebuild()}),
+    S[l].pLoaded?null:fetchAll(pc).then(docs=>{
+      S[l].punches=docs;S[l].pLoaded=true;
+      if(l===lang){punches=docs;pLoaded=true;renderPunches()}
+    },e=>{S[l].pErr=code(e);if(l===lang)renderPunches()})
+  ]).then(()=>{loading[l]=null});
+  return loading[l];
+}
+</script>
+</body></html>
